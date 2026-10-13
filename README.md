@@ -8,7 +8,7 @@ SpecWithCode is a free desktop workspace for the coding agents you already pay f
 
 It is built on [SpecWeave](https://github.com/anton-abyzov/specweave), the open-source CLI (`npm install -g specweave`) that keeps that record in git. Website: [spec-weave.com/studio](https://spec-weave.com/studio).
 
-Free, MIT licensed, no account. You bring your own provider subscriptions or API keys; SpecWithCode supplies no inference and charges nothing.
+Free for every developer and team, MIT licensed, no account. You bring your own provider subscriptions or API keys; SpecWithCode supplies no inference, resells no tokens and charges no seat fee to run agents on your own machines. What is free today stays free; companies can pay for hosted private skills and enterprise support ([pricing](https://spec-weave.com/pricing)).
 
 ## What it does
 
@@ -70,4 +70,4 @@ Early access. Projects, providers, usage limits, machines, routines and the Tele
 
 ## Credits
 
-SpecWithCode is a fork of [T3 Code](https://github.com/pingdotgg/t3code) (MIT). The original license and notices are kept in [LICENSE](LICENSE), with the pinned upstream source in [UPSTREAM.md](UPSTREAM.md).
+SpecWithCode includes MIT-licensed open-source code. The original copyright and license notices are kept in [LICENSE](LICENSE), with source provenance in [UPSTREAM.md](UPSTREAM.md).

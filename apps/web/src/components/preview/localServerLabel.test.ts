@@ -18,7 +18,7 @@ describe("friendlyProcessName", () => {
   });
 
   it("returns null for unknown or missing names", () => {
-    expect(friendlyProcessName("t3")).toBeNull();
+    expect(friendlyProcessName("devd")).toBeNull();
     expect(friendlyProcessName(null)).toBeNull();
     expect(friendlyProcessName("  ")).toBeNull();
   });
@@ -40,10 +40,10 @@ describe("describeLocalServer", () => {
   });
 
   it("never headlines an unknown process name; it stays on the second line", () => {
-    expect(describeLocalServer({ ...base, port: 3773, processName: "t3" })).toEqual({
+    expect(describeLocalServer({ ...base, port: 3773, processName: "devd" })).toEqual({
       title: "Local server",
-      description: "localhost:3773 · t3",
-      hoverText: "Local server — localhost:3773 · t3",
+      description: "localhost:3773 · devd",
+      hoverText: "Local server — localhost:3773 · devd",
     });
   });
 

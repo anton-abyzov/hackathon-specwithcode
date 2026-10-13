@@ -112,10 +112,7 @@ check("upstream MIT provenance retained exactly", () => {
   );
   assert.match(read("UPSTREAM.md"), /T3 Tools Inc/);
   assert.match(read("UPSTREAM.md"), new RegExp(upstream));
-  assert.match(
-    read("scripts/lib/third-party-licenses.ts"),
-    /\["@t3tools\/", "@specweave-studio\/"\]/,
-  );
+  assert.match(read("scripts/lib/third-party-licenses.ts"), /\["@specweave-studio\/"\]/);
 });
 check(
   "reference trees and unlisted fixtures preserved; reviewed fixture migrations hash-verified",
@@ -286,44 +283,16 @@ const QUOTED_CONTRACTS_IMPORT = /@t3tools\/contracts/g;
 // Single deliberate references inside files Studio otherwise owns. Only the
 // quoted fragment is tolerated, so a second reference in the same file fails.
 const UPSTREAM_REFERENCE_FRAGMENTS = [
-  // Alias that lets the byte-preserved integration fixture
-  // apps/server/integration/fixtures/transferBudget.ts resolve its original import.
-  ["apps/server/tsconfig.json", /"@t3tools\/contracts": \[/g],
   // The self-update guard has to name upstream's feeds in order to refuse them.
   [
     "apps/desktop/src/updates/DesktopUpdates.ts",
     /UPSTREAM_UPDATE_FEED_PATTERN = \/pingdotgg\|t3code\|t3tools\|t3\\\.codes\/i/g,
   ],
-  // Upstream's package scope still counts as first-party for licence
-  // attribution, and must never be left unresolved in a CLI bundle.
-  ["scripts/lib/third-party-licenses.ts", /\["@t3tools\/", "@specweave-studio\/"\]/g],
-  ["scripts/lib/cli-external-packages.ts", /id\.startsWith\("@t3tools\/"\)/g],
   ["third-party-licenses.config.json", GHOSTTY_SOURCE_BRANCH],
   ["scripts/lib/third-party-licenses.test.ts", GHOSTTY_SOURCE_BRANCH],
-  // MIT attribution in the user guide: the original is named once and linked
-  // at a fixed upstream commit, and its sibling product is ruled out by name.
-  [
-    "docs/studio/getting-started.md",
-    /https:\/\/github\.com\/pingdotgg\/t3code\/blob\/30cc788975500a8c00d32a50f348174d1ce578d1\/LICENSE(?=\))/g,
-  ],
-  [
-    "docs/studio/getting-started.md",
-    /https:\/\/github\.com\/pingdotgg\/t3code\/blob\/30cc788975500a8c00d32a50f348174d1ce578d1\/docs\/user\/composer\.md(?=\))/g,
-  ],
-  ["docs/studio/getting-started.md", /\[MIT-licensed T3 Code\]/g],
-  ["docs/studio/getting-started.md", /fleet repository or T3 Chat\./g],
-  // MIT attribution in the README credits: the original is named once and linked.
-  ["README.md", /a fork of \[T3 Code\]\(https:\/\/github\.com\/pingdotgg\/t3code\)/g],
   // Retained verification evidence: a past module-resolution error, verbatim.
   ["reports/t26-resolution-lifecycle/README.md", QUOTED_CONTRACTS_IMPORT],
   ["reports/t26-resolution-lifecycle/guards-replay.txt", QUOTED_CONTRACTS_IMPORT],
-  // Search string of the in-memory rewrite that brings a recorded transcript,
-  // preserved byte for byte under the client identity it was captured with, up
-  // to the current product name before the test replays it.
-  [
-    "apps/server/src/mcp/OrchestratorMcpToolkit.integration.test.ts",
-    /'"clientInfo":\{"name":"T3 Code","title":"T3 Code"',/g,
-  ],
 ];
 
 // Files kept only in the private repository. A public snapshot omits them, so

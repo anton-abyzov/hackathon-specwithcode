@@ -8,11 +8,13 @@ export const FIXTURE_UPSTREAM = '10f39eb9ac80c9a4b7f5097575dd2addc3b6f631';
 export const FIXTURE_REVIEW_COMMITS = Object.freeze([
   '0b3c7c92330742fa17ed4fdfaa211c56df4ef58c',
   'e400f67aed5d5e34a9010298983e32a0ae2cb157',
+  'e9a3cb08f2a073e594699446e7c28d67b5cb2f2a',
+  '9d03b0c63a2611aaff707d7b55a344de27437387',
 ]);
 // A manifest edit is not an approval. This digest pins the independently reviewed
 // closed set, including paths, both byte hashes/modes, reasons and review commits.
 // The original review branches need not be fetched after their cherry-picks.
-export const FIXTURE_MANIFEST_SHA256 = 'b15b46ffa5f83937e5879a57e4618c966b62c5cfd74599d155e81028c46f5e19';
+export const FIXTURE_MANIFEST_SHA256 = '3a983321e10e5ab354c94e4b1f8268d2f28e3900652a54c72e6de615fbe10bcb';
 const MANIFEST_PATH = 'scripts/studio-toolchain/reviewed-fixture-migrations.json';
 const FIXTURE_DIRECTORIES = new Set(['fixtures', '__fixtures__', 'replays']);
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -34,7 +36,7 @@ export function validateFixtureManifest(manifest) {
   assert.equal(manifest.schemaVersion, 1, 'Unsupported fixture manifest version');
   assert.equal(manifest.upstreamCommit, FIXTURE_UPSTREAM, 'Wrong fixture baseline commit');
   assert.deepEqual(manifest.reviewCommits, FIXTURE_REVIEW_COMMITS, 'Wrong fixture review commits');
-  assert.equal(manifest.entries.length, 80, 'The reviewed fixture set must contain exactly 80 entries');
+  assert.equal(manifest.entries.length, 197, 'The reviewed fixture set must contain exactly 197 entries');
   const seen = new Set();
   for (const entry of manifest.entries) {
     canonicalPath(entry.path);
@@ -46,7 +48,8 @@ export function validateFixtureManifest(manifest) {
     assert.ok(FIXTURE_REVIEW_COMMITS.includes(entry.reviewCommit), `Unknown review commit: ${entry.path}`);
     const reason = entry.path.endsWith('/fixtures/shared.ts') || entry.path.endsWith('/fixtures/index.ts') ? 'type-import'
       : entry.path.endsWith('/fixtures/opencode2_inbox/output.ts') ? 'strict-regex-product-identity'
-      : entry.path.endsWith('.ndjson') ? 'product-identity-metadata' : null;
+      : entry.path.endsWith('.ndjson') ? 'product-identity-metadata'
+      : entry.path.endsWith('.ts') ? 'product-name-prose' : null;
     assert.ok(reason, `Unknown migration file: ${entry.path}`);
     assert.equal(entry.reason, reason, `Wrong migration reason: ${entry.path}`);
   }

@@ -1,5 +1,8 @@
 import { assert } from "@effect/vitest";
-import type { OrchestrationV2TurnItem, ProviderReplayTranscript } from "@t3tools/contracts";
+import type {
+  OrchestrationV2TurnItem,
+  ProviderReplayTranscript,
+} from "@specweave-studio/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {
@@ -66,8 +69,8 @@ export function assertToolCallReadOnlyOnRequestOutput(
   }
 }
 
-// T3 advertises no client fs or terminal to Grok, so Grok reads and writes the
-// workspace itself and gates the write with its own permission prompt: T3
+// SpecWithCode advertises no client fs or terminal to Grok, so Grok reads and writes the
+// workspace itself and gates the write with its own permission prompt: SpecWithCode
 // answers that prompt (the shared assertion pins it as the only request) and
 // never serves a file or terminal request.
 export function assertToolCallReadOnlyOnRequestGrokOutput(
@@ -84,7 +87,7 @@ export function assertToolCallReadOnlyOnRequestGrokOutput(
     };
     return frame.method === "session/request_permission" ? [frame.params?.toolCall?.kind] : [];
   });
-  assert.deepEqual(permissionKinds, ["edit"], "Grok must ask T3 before its own write");
+  assert.deepEqual(permissionKinds, ["edit"], "Grok must ask SpecWithCode before its own write");
 
   // Grok's edit prompt is the one whose "always" answer lasts only the session.
   const approval = projectionFor(result, transcript.scenario).turnItems.find(

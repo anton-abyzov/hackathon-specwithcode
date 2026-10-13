@@ -116,9 +116,9 @@ for (const path of ['../app/fixtures/reviewed.ndjson', '/app/fixtures/reviewed.n
 test('references cannot be added to the approval list', t => {
   const f = fixture(t); f.approvals[0].path = '.repos/reference.txt'; assert.throws(f.run, /Ineligible migration path/);
 });
-test('the committed 80-file manifest matches its independent digest', () => {
+test('the committed 197-file manifest matches its independent digest', () => {
   assert.equal(sha(pinnedBytes), FIXTURE_MANIFEST_SHA256);
-  assert.equal(loadReviewedFixtureManifest(sourceRoot).entries.length, 80);
+  assert.equal(loadReviewedFixtureManifest(sourceRoot).entries.length, 197);
 });
 for (const mutation of ['missing', 'extra', 'hash', 'baseline', 'review', 'reason']) test(`the production loader rejects a ${mutation} manifest edit`, t => {
   const root = mkdtempSync(join(tmpdir(), 'studio-manifest-audit-'));
@@ -135,7 +135,7 @@ for (const mutation of ['missing', 'extra', 'hash', 'baseline', 'review', 'reaso
 });
 test('manifest schema independently rejects missing entries and the wrong baseline', () => {
   const missing = structuredClone(pinnedManifest); missing.entries.pop();
-  assert.throws(() => validateFixtureManifest(missing), /exactly 80/);
+  assert.throws(() => validateFixtureManifest(missing), /exactly 197/);
   const wrong = structuredClone(pinnedManifest); wrong.upstreamCommit = '0'.repeat(40);
   assert.throws(() => validateFixtureManifest(wrong), /Wrong fixture baseline/);
 });
