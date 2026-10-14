@@ -86,11 +86,11 @@ check("independent runtime values", () => {
   assert.equal(STUDIO_NAME, "SpecWithCode");
   assert.equal(STUDIO_CLI, "specweave-studio");
   assert.equal(STUDIO_DEFAULT_PORT, 8319);
-  assert.equal(studioDefaultHome("/tmp/studio-user"), "/tmp/studio-user/.specweave-studio");
+  assert.equal(studioDefaultHome("/tmp/studio-user"), "/tmp/studio-user/.specwithcode");
   const prior = process.env.T3CODE_HOME;
   process.env.T3CODE_HOME = "/tmp/upstream-store";
   try {
-    assert.equal(studioDefaultHome("/tmp/studio-user"), "/tmp/studio-user/.specweave-studio");
+    assert.equal(studioDefaultHome("/tmp/studio-user"), "/tmp/studio-user/.specwithcode");
   } finally {
     if (prior === undefined) delete process.env.T3CODE_HOME;
     else process.env.T3CODE_HOME = prior;
