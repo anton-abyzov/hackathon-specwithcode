@@ -192,16 +192,16 @@ check("owned runtime has no original brand, env or origin", () => {
   assert.deepEqual(findings, []);
 });
 check("real first-party mark replaced", () => {
-  // The woven-S brand mark from assets/brand/specweave-mark.svg starts with this path.
-  assert.match(read("assets/prod/logo.svg"), /M349\.8 185\.5/);
-  assert.match(read("apps/web/src/components/StudioWordmark.tsx"), /M349\.8 185\.5/);
+  // The page-and-prompt brand mark from assets/brand/specwithcode-mark.svg starts with this path.
+  assert.match(read("assets/prod/logo.svg"), /M29 10H60L78 28/);
+  assert.match(read("apps/web/src/components/StudioWordmark.tsx"), /M29 10H60L78 28/);
   assert.doesNotMatch(read("apps/web/src/components/StudioWordmark.tsx"), /M33.4509/);
   assert.match(read("apps/web/index.html"), /SpecWithCode/);
   for (const p of [
     "apps/desktop/resources/dmg/dmg-background-latest.svg",
     "apps/desktop/resources/dmg/dmg-background-nightly.svg",
   ]) {
-    assert.match(read(p), /M349\.8 185\.5/);
+    assert.match(read(p), /M29 10H60L78 28/);
     assert.doesNotMatch(read(p), /M33\.4509|base64,|M16 22H40/);
   }
 });
@@ -404,16 +404,16 @@ const DERIVED_UPSTREAM_ARTWORK = new Map([
   [
     "apps/mobile/assets/android-splash-icon-nightly.png",
     {
-      blob: "85fc7929f931165af09599e9e9ac67ce65b44484",
-      depicts: "the woven-S brand mark over that night sky and the two clouds",
+      blob: "a0f110a43e18ee7531c0cbf27ed4250cec5e431c",
+      depicts: "the page-and-prompt brand mark over that night sky and the two clouds",
       differs: "Studio's mark composed over a render of the three nightly layers",
     },
   ],
   [
     "apps/mobile/assets/android-splash-icon-dev.png",
     {
-      blob: "e996334e1ddc9dcd444b0454ebc179ed7af3556e",
-      depicts: "the woven-S brand mark over the blueprint paper",
+      blob: "885370117d12ff79531ee5ab240fa8f81276d78f",
+      depicts: "the page-and-prompt brand mark over the blueprint paper",
       differs: "Studio's mark composed over a render of the development background layer",
     },
   ],
