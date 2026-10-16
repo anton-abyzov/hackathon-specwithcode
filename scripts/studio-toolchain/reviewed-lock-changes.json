@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "upstreamCommit": "10f39eb9ac80c9a4b7f5097575dd2addc3b6f631",
+  "changes": [
+    {
+      "op": "add",
+      "parent": [
+        "patchedDependencies:"
+      ],
+      "lines": [
+        "app-builder-lib@26.15.6: 4688f96749e3d76cf27bc535d874470bf264610a331db13644df7715d699acf1"
+      ],
+      "patchFile": "patches/app-builder-lib@26.15.6.patch",
+      "commit": "0414f75e2d682793d5c74697a9900730476ac189",
+      "pr": 198,
+      "reason": "Reviewed app-builder-lib patch: set-key-partition-list now unlocks the temporary signing keychain with the keychain password instead of the .p12 password."
+    },
+    {
+      "op": "add",
+      "parent": [
+        "importers:"
+      ],
+      "lines": [
+        "apps/chrome-extension: {}"
+      ],
+      "commit": "c9868979863a896a1ae30e2b03bd43c0cb8f815d",
+      "pr": 241,
+      "reason": "Empty importer for the dependency-free apps/chrome-extension workspace added by #230."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "importers:",
+        "apps/mobile:",
+        "dependencies:",
+        "'@specweave-studio/mobile-markdown-text':"
+      ],
+      "before": "version: file:apps/mobile/modules/studio-markdown-text(afae94297d61d3a65abc2214f9b05422)",
+      "after": "version: file:apps/mobile/modules/studio-markdown-text(db966ed54b0732dc85844abd1d523a92)",
+      "commit": "f08e451aa562c04b5ef8a36074c7682155d3f67c",
+      "pr": 197,
+      "reason": "pnpm recomputed the peer-graph hash of this workspace module after the identity map renamed two of its peers; its resolved dependencies are byte-identical."
+    },
+    {
+      "op": "add",
+      "parent": [
+        "importers:",
+        "apps/server:",
+        "dependencies:"
+      ],
+      "lines": [
+        "'@muse-code/sdk':",
+        "  specifier: 1.4.9",
+        "  version: 1.4.9(@types/node@24.12.4)"
+      ],
+      "commit": "b22b086151ec3296d9491305a9e06a6a17d6b840",
+      "pr": 235,
+      "reason": "Muse Code provider SDK, exact pin; added at 1.4.7/1.4.8 by #183 (3328c7c1d, 6f441d506), bumped to 1.4.9 by #235."
+    },
+    {
+      "op": "add",
+      "parent": [
+        "importers:",
+        "apps/server:",
+        "dependencies:"
+      ],
+      "lines": [
+        "smol-toml:",
+        "  specifier: 1.8.0",
+        "  version: 1.8.0"
+      ],
+      "commit": "f3071151947cc4e80740cd534631bfd41dcb41ff",
+      "pr": 187,
+      "reason": "Native MCP connection discovery parses Codex TOML configuration; smol-toml@1.8.0 is already a pinned upstream package."
+    },
+    {
+      "op": "add",
+      "parent": [
+        "importers:",
+        "apps/server:",
+        "dependencies:"
+      ],
+      "lines": [
+        "zod:",
+        "  specifier: 4.6.5",
+        "  version: 4.6.5"
+      ],
+      "commit": "0acc6e4315776f5ed96a5724c094eec2e2fd3dbb",
+      "pr": 232,
+      "reason": "Server imports zod directly; zod@4.6.5 is already a pinned upstream package."
+    },
+    {
+      "op": "add",
+      "parent": [
+        "packages:"
+      ],
+      "package": "@muse-code/sdk@1.4.9",
+      "integrity": "sha512-fYWvvK0Ar11e0KHbepmp1Kobp6w9UPVVq1rL6ZY7uY1t9NlK6yrF66hELky6G7NgvpH2q/RfeFYfiyuESpHo2A==",
+      "lines": [
+        "'@muse-code/sdk@1.4.9':",
+        "  resolution: {integrity: sha512-fYWvvK0Ar11e0KHbepmp1Kobp6w9UPVVq1rL6ZY7uY1t9NlK6yrF66hELky6G7NgvpH2q/RfeFYfiyuESpHo2A==}",
+        "  engines: {node: '>=20'}",
+        "  peerDependencies:",
+        "    '@types/node': 24.12.4",
+        "  peerDependenciesMeta:",
+        "    '@types/node':",
+        "      optional: true"
+      ],
+      "commit": "b22b086151ec3296d9491305a9e06a6a17d6b840",
+      "pr": 235,
+      "reason": "Registry record of the Muse SDK; integrity equals the npm registry dist.integrity of 1.4.9, which has no dependencies."
+    },
+    {
+      "op": "add",
+      "parent": [
+        "snapshots:"
+      ],
+      "lines": [
+        "'@muse-code/sdk@1.4.9(@types/node@24.12.4)':",
+        "  optionalDependencies:",
+        "    '@types/node': 24.12.4"
+      ],
+      "commit": "b22b086151ec3296d9491305a9e06a6a17d6b840",
+      "pr": 235,
+      "reason": "Snapshot of the Muse SDK with its optional @types/node peer."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "snapshots:"
+      ],
+      "before": "'@specweave-studio/mobile-markdown-text@file:apps/mobile/modules/studio-markdown-text(afae94297d61d3a65abc2214f9b05422)':",
+      "after": "'@specweave-studio/mobile-markdown-text@file:apps/mobile/modules/studio-markdown-text(db966ed54b0732dc85844abd1d523a92)':",
+      "commit": "f08e451aa562c04b5ef8a36074c7682155d3f67c",
+      "pr": 197,
+      "reason": "pnpm recomputed the peer-graph hash of this workspace module after the identity map renamed two of its peers; its resolved dependencies are byte-identical."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "snapshots:",
+        "'@tanstack/router-plugin@1.168.13(@tanstack/react-router@1.170.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))':",
+        "dependencies:"
+      ],
+      "before": "zod: 4.4.3",
+      "after": "zod: 4.6.5",
+      "commit": "0acc6e4315776f5ed96a5724c094eec2e2fd3dbb",
+      "pr": 232,
+      "reason": "pnpm deduplicated this build plugin's zod (declared ^4.4.3) onto the server's direct zod@4.6.5, an unchanged upstream registry record."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "snapshots:"
+      ],
+      "before": "app-builder-lib@26.15.6(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6):",
+      "after": "app-builder-lib@26.15.6(patch_hash=4688f96749e3d76cf27bc535d874470bf264610a331db13644df7715d699acf1)(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6):",
+      "commit": "0414f75e2d682793d5c74697a9900730476ac189",
+      "pr": 198,
+      "reason": "Reviewed app-builder-lib patch: set-key-partition-list now unlocks the temporary signing keychain with the keychain password instead of the .p12 password."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "snapshots:",
+        "dmg-builder@26.15.6(electron-builder-squirrel-windows@26.15.6):",
+        "dependencies:"
+      ],
+      "before": "app-builder-lib: 26.15.6(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6)",
+      "after": "app-builder-lib: 26.15.6(patch_hash=4688f96749e3d76cf27bc535d874470bf264610a331db13644df7715d699acf1)(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6)",
+      "commit": "0414f75e2d682793d5c74697a9900730476ac189",
+      "pr": 198,
+      "reason": "Reviewed app-builder-lib patch: set-key-partition-list now unlocks the temporary signing keychain with the keychain password instead of the .p12 password."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "snapshots:",
+        "electron-builder-squirrel-windows@26.15.6(dmg-builder@26.15.6):",
+        "dependencies:"
+      ],
+      "before": "app-builder-lib: 26.15.6(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6)",
+      "after": "app-builder-lib: 26.15.6(patch_hash=4688f96749e3d76cf27bc535d874470bf264610a331db13644df7715d699acf1)(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6)",
+      "commit": "0414f75e2d682793d5c74697a9900730476ac189",
+      "pr": 198,
+      "reason": "Reviewed app-builder-lib patch: set-key-partition-list now unlocks the temporary signing keychain with the keychain password instead of the .p12 password."
+    },
+    {
+      "op": "replace",
+      "parent": [
+        "snapshots:",
+        "electron-builder@26.15.6(electron-builder-squirrel-windows@26.15.6):",
+        "dependencies:"
+      ],
+      "before": "app-builder-lib: 26.15.6(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6)",
+      "after": "app-builder-lib: 26.15.6(patch_hash=4688f96749e3d76cf27bc535d874470bf264610a331db13644df7715d699acf1)(dmg-builder@26.15.6)(electron-builder-squirrel-windows@26.15.6)",
+      "commit": "0414f75e2d682793d5c74697a9900730476ac189",
+      "pr": 198,
+      "reason": "Reviewed app-builder-lib patch: set-key-partition-list now unlocks the temporary signing keychain with the keychain password instead of the .p12 password."
+    }
+  ]
+}

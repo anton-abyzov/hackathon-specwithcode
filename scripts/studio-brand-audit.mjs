@@ -241,7 +241,8 @@ const PUBLISHABLE_KEY = /pk_(?:live|test)_([A-Za-z0-9+/_-]+)/g;
 // Studio owns, and a file listed here that names upstream no longer is reported.
 const UPSTREAM_NAMING_TOOLCHAIN_FILES = new Set([
   // Rewrites upstream's package scope and lint plugin name in upstream's
-  // lockfile, to get the lockfile this checkout has to match byte for byte.
+  // lockfile, to get the lockfile this checkout has to match line for line,
+  // apart from the changes listed in reviewed-lock-changes.json.
   "scripts/studio-toolchain/preservation-audit.mjs",
   // Its sample recording is captured under upstream's client name, which the
   // reviewed migration under test replaces.
