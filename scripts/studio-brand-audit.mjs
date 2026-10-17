@@ -10,11 +10,16 @@ import {
   STUDIO_DEFAULT_PORT,
   studioDefaultHome,
 } from "../packages/shared/src/studioIdentity.ts";
-import { buildRuntimeInstructions } from "../apps/server/src/provider/RuntimeInstructions.ts";
 import {
-  STUDIO_CODE_ORCHESTRATION_INSTRUCTIONS,
-  STUDIO_CODE_BROWSER_TOOL_INSTRUCTIONS,
-} from "../apps/server/src/provider/StudioOrchestrationInstructions.ts";
+  buildRuntimeInstructions,
+  HEADLESS_BROWSER_ENVIRONMENT,
+  withHeadlessBrowserEnvironment,
+} from "../apps/server/src/provider/RuntimeInstructions.ts";
+import {
+  HEADLESS_ENVIRONMENT_HELPERS,
+  PROVIDER_ADAPTER_PROCESS_CHAINS,
+  PROVIDER_PROCESS_SPAWN_SITES,
+} from "../apps/server/src/provider/providerSpawnSites.ts";
 import { sourceVersion } from "./studio-projects/version.mjs";
 import { auditPreservedPayloads } from "./studio-toolchain/preservation-audit.mjs";
 import {
@@ -671,15 +676,72 @@ check("approval default and propagated headless policy", () => {
     read("packages/contracts/src/providerPolicy.ts"),
     /DEFAULT_RUNTIME_MODE: RuntimeMode = "approval-required"/,
   );
-  for (const context of [
-    buildRuntimeInstructions({ harness: "audit" }),
-    STUDIO_CODE_ORCHESTRATION_INSTRUCTIONS,
-    STUDIO_CODE_BROWSER_TOOL_INSTRUCTIONS,
-  ]) {
-    assert.match(context, /headless: true/);
-    assert.match(context, /PWDEBUG=0/);
-    assert.match(context, /PLAYWRIGHT_HTML_OPEN=never/);
-    assert.match(context, /every delegated agent/);
+  // The prose every provider receives: headless, and passed to delegated agents.
+  const runtime = buildRuntimeInstructions({ harness: "audit" });
+  assert.match(runtime, /headless: true/);
+  assert.match(runtime, /without the user's approval/);
+  assert.match(runtime, /Pass this rule to agents you delegate to\./);
+  // The variables every provider process gets, applied over inherited values.
+  assert.deepEqual(
+    { ...HEADLESS_BROWSER_ENVIRONMENT },
+    { PWDEBUG: "0", PLAYWRIGHT_HTML_OPEN: "never" },
+  );
+  assert.deepEqual(withHeadlessBrowserEnvironment({ PWDEBUG: "1", KEEP: "1" }), {
+    KEEP: "1",
+    PWDEBUG: "0",
+    PLAYWRIGHT_HTML_OPEN: "never",
+  });
+  const server = (p) => read("apps/server/src/" + p);
+  for (const site of Object.keys(PROVIDER_PROCESS_SPAWN_SITES)) {
+    assert.ok(
+      HEADLESS_ENVIRONMENT_HELPERS.some((helper) => server(site).includes(helper)),
+      site + " applies HEADLESS_BROWSER_ENVIRONMENT",
+    );
+  }
+  const adapters = readdirSync(join(root, "apps/server/src/orchestration-v2/Adapters"))
+    .filter((name) => name.endsWith("AdapterV2.ts"))
+    .map((name) => "orchestration-v2/Adapters/" + name);
+  assert.deepEqual(adapters.toSorted(), Object.keys(PROVIDER_ADAPTER_PROCESS_CHAINS).toSorted());
+  for (const [adapter, { chain }] of Object.entries(PROVIDER_ADAPTER_PROCESS_CHAINS)) {
+    if (chain === null) continue; // Cursor runs in the server process.
+    const steps = [adapter, ...chain.filter((step) => step !== adapter)];
+    steps.slice(1).forEach((step, index) => {
+      const name = step.split("/").at(-1);
+      assert.ok(server(steps[index]).includes("/" + name + '"'), steps[index] + " imports " + name);
+    });
+    assert.ok(steps.at(-1) in PROVIDER_PROCESS_SPAWN_SITES, adapter + " reaches a spawn site");
+  }
+  // The orchestration block no longer repeats the headless rule, so every
+  // sender must also send the runtime instructions (Claude through its policy).
+  const senders = [];
+  const scan = (directory) => {
+    for (const entry of readdirSync(join(root, directory), { withFileTypes: true })) {
+      const p = directory + "/" + entry.name;
+      if (entry.isDirectory()) scan(p);
+      else if (p.endsWith(".ts") && !/\.test\.|testkit|\/testing\//.test(p)) {
+        const source = read(p);
+        if (
+          !p.endsWith("/StudioOrchestrationInstructions.ts") &&
+          /STUDIO_CODE_ORCHESTRATION_INSTRUCTIONS|studioAcpPromptWithInstructions|studioOrchestrationPromptForFirstRun|studioOrchestrationSystemPrompt/.test(
+            source,
+          )
+        )
+          senders.push([p, source]);
+      }
+    }
+  };
+  scan("apps/server/src");
+  assert.ok(senders.length > 0);
+  const claudePolicy = server("provider/ClaudeWorkflowPolicy.ts");
+  for (const [p, source] of senders) {
+    const viaClaudePolicy =
+      /orchestrationInstructions:/.test(source) &&
+      /compileClaudeWorkflowPolicy\(/.test(source) &&
+      /buildRuntimeInstructions\([^)]*\),\s*input\.orchestrationInstructions/.test(claudePolicy);
+    assert.ok(
+      /buildRuntimeInstructions|STUDIO_HEADLESS_INSTRUCTIONS/.test(source) || viaClaudePolicy,
+      p + " sends orchestration instructions without the runtime instructions",
+    );
   }
 });
 console.log(

@@ -10,12 +10,23 @@ export const FIXTURE_REVIEW_COMMITS = Object.freeze([
   'e400f67aed5d5e34a9010298983e32a0ae2cb157',
   'e9a3cb08f2a073e594699446e7c28d67b5cb2f2a',
   '9d03b0c63a2611aaff707d7b55a344de27437387',
+  // The repository rename (#197) rewrote only origin URLs in seven Codex replay fixtures.
+  'f08e451aa562c04b5ef8a36074c7682155d3f67c',
 ]);
 // A manifest edit is not an approval. This digest pins the independently reviewed
 // closed set, including paths, both byte hashes/modes, reasons and review commits.
 // The original review branches need not be fetched after their cherry-picks.
-export const FIXTURE_MANIFEST_SHA256 = '3a983321e10e5ab354c94e4b1f8268d2f28e3900652a54c72e6de615fbe10bcb';
+export const FIXTURE_MANIFEST_SHA256 = 'f1d2deb1203a7af2c7c88f212c4f0da51a5113cb77bbe76f35663652e5eac904';
 const MANIFEST_PATH = 'scripts/studio-toolchain/reviewed-fixture-migrations.json';
+// Studio-authored files that live in a protected directory but have no upstream
+// counterpart. Same rule as above: each path, byte hash, mode, adding commit and
+// reason is reviewed and pinned here; a listed path may never shadow upstream.
+export const OWNED_FIXTURE_COMMITS = Object.freeze([
+  '3328c7c1d6a4513e928bbaf474994a47c37cb40b', // 0922: Muse provider test server.
+]);
+export const OWNED_FIXTURE_MANIFEST_SHA256 = 'ede3bdf07ae4fef1e872d37a142b575ac99ab0192a587492c47de37daec6433c';
+const OWNED_MANIFEST_PATH = 'scripts/studio-toolchain/owned-fixture-files.json';
+const OWNED_REASONS = Object.freeze(['owned-provider-test-fixture']);
 const FIXTURE_DIRECTORIES = new Set(['fixtures', '__fixtures__', 'replays']);
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const gitBlobHash = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
@@ -62,6 +73,31 @@ export function loadReviewedFixtureManifest(root) {
   return validateFixtureManifest(JSON.parse(bytes.toString('utf8')));
 }
 
+const keysOf = value => Object.keys(value ?? {}).sort();
+export function validateOwnedFixtureManifest(manifest) {
+  assert.deepEqual(keysOf(manifest), ['addedCommits', 'entries', 'reasons', 'schemaVersion', 'upstreamCommit'], 'Owned fixture manifest has unknown fields');
+  assert.equal(manifest.schemaVersion, 1, 'Unsupported owned fixture manifest version');
+  assert.equal(manifest.upstreamCommit, FIXTURE_UPSTREAM, 'Wrong owned fixture baseline commit');
+  assert.deepEqual(manifest.addedCommits, OWNED_FIXTURE_COMMITS, 'Wrong owned fixture commits');
+  assert.deepEqual(keysOf(manifest.reasons), [...OWNED_REASONS].sort(), 'Wrong owned fixture reasons');
+  assert.ok(Array.isArray(manifest.entries), 'Owned fixture entries must be a list');
+  for (const entry of manifest.entries) {
+    assert.deepEqual(keysOf(entry), ['addedCommit', 'mode', 'path', 'reason', 'sha256'], `Owned fixture entry has unknown fields: ${entry?.path}`);
+    canonicalPath(entry.path);
+    assert.match(entry.sha256, /^[a-f0-9]{64}$/, `Invalid owned sha256: ${entry.path}`);
+    assert.ok(['100644', '100755'].includes(entry.mode), `Invalid owned mode: ${entry.path}`);
+    assert.ok(OWNED_FIXTURE_COMMITS.includes(entry.addedCommit), `Unknown owned fixture commit: ${entry.path}`);
+    assert.ok(OWNED_REASONS.includes(entry.reason), `Unknown owned fixture reason: ${entry.path}`);
+  }
+  return manifest;
+}
+
+export function loadOwnedFixtureManifest(root) {
+  const bytes = readFileSync(join(root, OWNED_MANIFEST_PATH));
+  assert.equal(sha256(bytes), OWNED_FIXTURE_MANIFEST_SHA256, 'Owned fixture manifest differs from its pinned digest');
+  return validateOwnedFixtureManifest(JSON.parse(bytes.toString('utf8')));
+}
+
 export function readProtectedBaseline(root, upstream) {
   const entries = new Map();
   for (const row of git(root, ['ls-tree', '-r', '-z', upstream]).split('\0').filter(Boolean)) {
@@ -85,7 +121,7 @@ function protectedRoot(path) {
 // The caller supplies already pinned approvals; production has no configurable
 // baseline, manifest, or approval override. Tests exercise this byte guard with
 // tiny local Git repositories rather than editing production fixture trees.
-export function verifyFixtureTree(root, baseline, approvals) {
+export function verifyFixtureTree(root, baseline, approvals, owned = []) {
   const approved = new Map();
   for (const entry of approvals) {
     canonicalPath(entry.path);
@@ -99,6 +135,14 @@ export function verifyFixtureTree(root, baseline, approvals) {
     assert.equal(sha256(bytes), entry.upstreamSha256, `Wrong baseline bytes: ${entry.path}`);
     assert.notEqual(entry.upstreamSha256, entry.reviewedSha256, `Redundant fixture approval: ${entry.path}`);
     approved.set(entry.path, entry);
+  }
+  const ownedFiles = new Map();
+  for (const entry of owned) {
+    canonicalPath(entry.path);
+    assert.ok(!entry.path.startsWith('.repos/') && isProtectedPath(entry.path), `Ineligible owned fixture path: ${entry.path}`);
+    assert.ok(!ownedFiles.has(entry.path) && !approved.has(entry.path), `Duplicate owned fixture: ${entry.path}`);
+    assert.ok(!baseline.has(entry.path), `Owned fixture shadows an upstream file: ${entry.path}`);
+    ownedFiles.set(entry.path, entry);
   }
 
   const checkedDirectories = new Set();
@@ -138,31 +182,41 @@ export function verifyFixtureTree(root, baseline, approvals) {
     if (path.startsWith('.repos/')) references++;
     else if (!approved.has(path)) unchangedFixtures++;
   }
+  for (const [path, entry] of ownedFiles) {
+    const stat = checkedStat(path);
+    const mode = stat.isSymbolicLink() ? '120000' : stat.isFile() ? (stat.mode & 0o111 ? '100755' : '100644') : 'unsupported';
+    assert.equal(mode, entry.mode, `Owned fixture mode/type changed: ${path}`);
+    assert.equal(sha256(readFileSync(join(root, path))), entry.sha256, `Owned fixture bytes changed: ${path}`);
+  }
+  const listed = path => baseline.has(path) || ownedFiles.has(path);
 
   // Git finds new fixture trees; walking existing protected trees additionally
   // rejects ignored files and symlinks that Git's normal status would omit.
   const currentPaths = git(root, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0').filter(Boolean);
   for (const path of currentPaths) {
-    if (isProtectedPath(path)) assert.ok(baseline.has(path), `Unlisted protected file: ${path}`);
+    if (isProtectedPath(path)) assert.ok(listed(path), `Unlisted protected file: ${path}`);
   }
-  const roots = [...new Set([...baseline.keys()].map(protectedRoot))].sort();
+  const roots = [...new Set([...baseline.keys(), ...ownedFiles.keys()].map(protectedRoot))].sort();
   function walk(path) {
     if (baseline.get(path)?.mode === '160000') return;
     const stat = checkedStat(path);
     if (stat.isDirectory() && !stat.isSymbolicLink()) {
       for (const name of readdirSync(join(root, path))) walk(`${path}/${name}`);
-    } else assert.ok(baseline.has(path), `Unlisted protected file: ${path}`);
+    } else assert.ok(listed(path), `Unlisted protected file: ${path}`);
   }
   for (const path of roots) walk(path);
   return { referenceEntriesPreserved: references, referenceGitlinksPreserved: gitlinks,
     unlistedFixtureFilesPreserved: unchangedFixtures, reviewedFixtureMigrationsVerified: approved.size,
+    ownedFixtureFilesVerified: ownedFiles.size,
     reviewedFixtureBytesAndModesVerified: true, unlistedProtectedChangesRejected: true };
 }
 
 export function auditPreservedFixtures(root, upstream) {
   assert.equal(upstream, FIXTURE_UPSTREAM, 'Fixture audit must use the pinned upstream baseline');
   const manifest = loadReviewedFixtureManifest(root);
-  const result = verifyFixtureTree(root, readProtectedBaseline(root, upstream), manifest.entries);
+  const owned = loadOwnedFixtureManifest(root);
+  const result = verifyFixtureTree(root, readProtectedBaseline(root, upstream), manifest.entries, owned.entries);
   return { ...result, upstreamCommit: upstream, reviewCommits: FIXTURE_REVIEW_COMMITS,
-    manifestSha256: FIXTURE_MANIFEST_SHA256 };
+    manifestSha256: FIXTURE_MANIFEST_SHA256, ownedFixtureCommits: OWNED_FIXTURE_COMMITS,
+    ownedManifestSha256: OWNED_FIXTURE_MANIFEST_SHA256 };
 }
